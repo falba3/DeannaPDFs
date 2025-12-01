@@ -15,12 +15,12 @@ async function main() {
   const bookId = parseInt(args[0], 10);
   const outputPath = args[1];
   
-  const { buffer, filename, ministore } = await generateCatalogPdf(bookId);
+  const { buffer, filename, ministore, imageCount } = await generateCatalogPdf(bookId);
   
   const finalPath = outputPath || filename;
   fs.writeFileSync(finalPath, buffer);
   
-  console.log(`Found ${ministore.numClips} images for ministore: ${ministore.name}`);
+  console.log(`Found ${imageCount} images for ministore: ${ministore.name}`);
   console.log(`PDF generated: ${finalPath}`);
 }
 

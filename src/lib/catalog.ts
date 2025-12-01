@@ -47,7 +47,7 @@ export function generateCatalogHtml(images: Clipping[], options: CatalogOptions 
       return `
         <div class="catalog-item">
           <div class="image-wrapper">
-            <img src="${imgUrl}" alt="${caption}" loading="lazy" />
+            <img src="${imgUrl}" alt="${caption}" onerror="this.style.display='none'" />
           </div>
           ${caption ? `<p class="caption">${caption}</p>` : ''}
         </div>
@@ -144,7 +144,15 @@ export async function htmlToPdfBuffer(html: string): Promise<Buffer> {
   const browser = await chromium.launch();
   const page = await browser.newPage();
   
-  await page.setContent(html, { waitUntil: 'networkidle' });
+  await page.setContent(html, { waitUntil: 'networkidle', timeout: 60000 });
+  
+  // Wait for all images to load
+  await page.waitForFunction(() => {
+    const images = document.querySelectorAll('img');
+    return Array.from(images).every((img: HTMLImageElement) => img.complete);
+  }, { timeout: 30000 }).catch(() => {
+    console.log('Some images may not have loaded');
+  });
   
   const pdfBuffer = await page.pdf({
     format: 'A4',
@@ -156,7 +164,7 @@ export async function htmlToPdfBuffer(html: string): Promise<Buffer> {
   return pdfBuffer;
 }
 
-export async function generateCatalogPdf(bookId: number): Promise<{ buffer: Buffer; filename: string; ministore: Ministore }> {
+export async function generateCatalogPdf(bookId: number): Promise<{ buffer: Buffer; filename: string; ministore: Ministore; imageCount: number }> {
   const connector = new MySQLConnector();
   await connector.connect();
   
@@ -180,7 +188,7 @@ export async function generateCatalogPdf(bookId: number): Promise<{ buffer: Buff
     const safeName = ministore.name.replace(/[^a-zA-Z0-9]/g, '_');
     const filename = `catalog_${safeName}_${bookId}.pdf`;
     
-    return { buffer, filename, ministore };
+    return { buffer, filename, ministore, imageCount: images.length };
   } finally {
     await connector.disconnect();
   }
