@@ -26,7 +26,7 @@ async function main() {
   const ministores = await connector.executeQuery<{ id: number; name: string; numClips: number }>(
     'SELECT id, name, numClips FROM cliperest_book ORDER BY id DESC LIMIT 5'
   );
-  ministores.forEach(row => 
+  ministores.forEach(row =>
     console.log(`  ID: ${String(row.id).padStart(6)} | Clips: ${String(row.numClips).padStart(4)} | ${row.name.slice(0, 50)}`)
   );
 
@@ -35,10 +35,10 @@ async function main() {
   const goodMinistores = await connector.executeQuery<{ id: number; name: string; numClips: number }>(
     'SELECT id, name, numClips FROM cliperest_book WHERE numClips >= 5 ORDER BY numClips DESC LIMIT 5'
   );
-  goodMinistores.forEach(row => 
+  goodMinistores.forEach(row =>
     console.log(`  ID: ${String(row.id).padStart(6)} | Clips: ${String(row.numClips).padStart(4)} | ${row.name.slice(0, 50)}`)
   );
-  
+
   if (goodMinistores.length > 0) {
     console.log(`\nTry: npm run dev -- ${goodMinistores[0].id}`);
   }
