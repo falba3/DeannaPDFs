@@ -51,17 +51,34 @@ export function generateCatalogHtml(images: Clipping[], options: CatalogOptions 
     gridCols = 4; gridRows = 4;
   }
 
+  // Filter to only include items with actual image URLs
+  const isImageUrl = (url: string): boolean => {
+    if (!url) return false;
+    const lower = url.toLowerCase();
+    // Check for common image extensions or image hosting patterns
+    return lower.match(/\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i) !== null ||
+           lower.includes('/fotoweb/') ||
+           lower.includes('/images/') ||
+           lower.includes('/img/') ||
+           lower.includes('cloudinary') ||
+           lower.includes('imgur');
+  };
+
   const imageItems = images
     .map(img => {
-      const imgUrl = img.thumbnail || img.url || '';
+      // Prefer thumbnail, fall back to url only if it looks like an image
+      let imgUrl = img.thumbnail || '';
+      if (!imgUrl && img.url && isImageUrl(img.url)) {
+        imgUrl = img.url;
+      }
       const caption = img.caption || img.text || '';
       
-      if (!imgUrl) return '';
+      if (!imgUrl || !isImageUrl(imgUrl)) return '';
       
       return `
         <div class="catalog-item">
           <div class="image-wrapper">
-            <img src="${imgUrl}" alt="${caption}" onerror="this.style.display='none'" />
+            <img src="${imgUrl}" alt="${caption}" onerror="this.parentElement.parentElement.style.display='none'" />
           </div>
           ${caption ? `<p class="caption">${caption}</p>` : ''}
         </div>
@@ -72,10 +89,13 @@ export function generateCatalogHtml(images: Clipping[], options: CatalogOptions 
 
   const now = new Date();
   const monthYear = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-  // Get first 4 images for cover collage
-  const coverImages = images.slice(0, 4).map(img => img.thumbnail || img.url || '').filter(Boolean);
   
+  // Count actual valid images
+  const validImageCount = images.filter(img => {
+    const imgUrl = img.thumbnail || '';
+    return imgUrl && isImageUrl(imgUrl);
+  }).length;
+
   const coverHtml = showCover ? `
   <div class="cover">
     <div class="cover-header">
@@ -87,14 +107,8 @@ export function generateCatalogHtml(images: Clipping[], options: CatalogOptions 
       <h1>${coverTitle}</h1>
       ${coverSubtitle ? `<p class="subtitle">${coverSubtitle}</p>` : ''}
       <div class="cover-divider"></div>
-      <p class="item-count">${images.length} items</p>
+      <p class="item-count">${validImageCount} items</p>
     </div>
-    
-    ${coverImages.length > 0 ? `
-    <div class="cover-preview">
-      ${coverImages.map(url => `<div class="preview-thumb"><img src="${url}" /></div>`).join('')}
-    </div>
-    ` : ''}
   </div>` : '';
 
   return `<!DOCTYPE html>
@@ -186,25 +200,6 @@ export function generateCatalogHtml(images: Clipping[], options: CatalogOptions 
       font-size: 0.8rem;
       color: #888;
       font-weight: 500;
-    }
-    
-    .cover-preview {
-      display: flex;
-      gap: 2px;
-      padding: 0;
-      border-top: 1px solid #e5e5e5;
-    }
-    
-    .preview-thumb {
-      flex: 1;
-      height: 120px;
-      overflow: hidden;
-    }
-    
-    .preview-thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
     }
     
     .catalog-container { padding: 10px 0; }
