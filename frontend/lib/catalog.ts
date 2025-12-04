@@ -73,12 +73,28 @@ export function generateCatalogHtml(images: Clipping[], options: CatalogOptions 
   const now = new Date();
   const monthYear = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
+  // Get first 4 images for cover collage
+  const coverImages = images.slice(0, 4).map(img => img.thumbnail || img.url || '').filter(Boolean);
+  
   const coverHtml = showCover ? `
   <div class="cover">
-    <h1>${coverTitle}</h1>
-    ${coverSubtitle ? `<p class="subtitle">${coverSubtitle}</p>` : ''}
-    <p class="date">${monthYear}</p>
-    <p class="item-count">${images.length} items</p>
+    <div class="cover-header">
+      <span class="cover-label">CATALOG</span>
+      <span class="cover-date">${monthYear}</span>
+    </div>
+    
+    <div class="cover-main">
+      <h1>${coverTitle}</h1>
+      ${coverSubtitle ? `<p class="subtitle">${coverSubtitle}</p>` : ''}
+      <div class="cover-divider"></div>
+      <p class="item-count">${images.length} items</p>
+    </div>
+    
+    ${coverImages.length > 0 ? `
+    <div class="cover-preview">
+      ${coverImages.map(url => `<div class="preview-thumb"><img src="${url}" /></div>`).join('')}
+    </div>
+    ` : ''}
   </div>` : '';
 
   return `<!DOCTYPE html>
@@ -104,26 +120,92 @@ export function generateCatalogHtml(images: Clipping[], options: CatalogOptions 
       height: 100vh;
       display: flex;
       flex-direction: column;
+      background: #fafafa;
+      color: #1a1a1a;
+      page-break-after: always;
+      padding: 0;
+    }
+    
+    .cover-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 32px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    
+    .cover-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      color: #666;
+    }
+    
+    .cover-date {
+      font-size: 0.75rem;
+      color: #888;
+    }
+    
+    .cover-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      page-break-after: always;
       padding: 40px;
     }
     
     .cover h1 {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: 3rem;
-      font-weight: 700;
-      margin-bottom: 16px;
-      letter-spacing: -1px;
+      font-size: 2.4rem;
+      font-weight: 400;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+      color: #1a1a1a;
+      max-width: 600px;
+      line-height: 1.2;
     }
     
-    .cover .subtitle { font-size: 1.1rem; font-weight: 300; opacity: 0.9; max-width: 500px; }
-    .cover .date { margin-top: 30px; font-size: 0.85rem; opacity: 0.7; }
-    .cover .item-count { margin-top: 12px; padding: 6px 20px; background: rgba(255,255,255,0.2); border-radius: 16px; font-size: 0.8rem; }
+    .cover .subtitle { 
+      font-size: 0.95rem; 
+      font-weight: 400; 
+      color: #666;
+      max-width: 450px;
+      line-height: 1.5;
+    }
+    
+    .cover-divider {
+      width: 40px;
+      height: 2px;
+      background: #1a1a1a;
+      margin: 24px 0;
+    }
+    
+    .cover .item-count { 
+      font-size: 0.8rem;
+      color: #888;
+      font-weight: 500;
+    }
+    
+    .cover-preview {
+      display: flex;
+      gap: 2px;
+      padding: 0;
+      border-top: 1px solid #e5e5e5;
+    }
+    
+    .preview-thumb {
+      flex: 1;
+      height: 120px;
+      overflow: hidden;
+    }
+    
+    .preview-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
     
     .catalog-container { padding: 10px 0; }
     
