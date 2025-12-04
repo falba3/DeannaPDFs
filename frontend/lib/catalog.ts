@@ -55,13 +55,43 @@ export function generateCatalogHtml(images: Clipping[], options: CatalogOptions 
   const isImageUrl = (url: string): boolean => {
     if (!url) return false;
     const lower = url.toLowerCase();
-    // Check for common image extensions or image hosting patterns
-    return lower.match(/\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i) !== null ||
-           lower.includes('/fotoweb/') ||
-           lower.includes('/images/') ||
-           lower.includes('/img/') ||
-           lower.includes('cloudinary') ||
-           lower.includes('imgur');
+    
+    // Reject known non-image URL patterns
+    const nonImagePatterns = [
+      'twitter.com', 'x.com',
+      'facebook.com', 'fb.com',
+      'youtube.com/watch', 'youtu.be/',
+      'podcasts.apple.com',
+      'open.spotify.com',
+      'instagram.com/p/',
+      'linkedin.com',
+      'tiktok.com',
+      '/article/', '/news/', '/noticias/',
+      '/tag/', '/category/',
+    ];
+    
+    if (nonImagePatterns.some(pattern => lower.includes(pattern))) {
+      return false;
+    }
+    
+    // Accept if it has image extension
+    if (lower.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)(\?|#|$)/i)) {
+      return true;
+    }
+    
+    // Accept known image hosting domains/patterns
+    const imageHostPatterns = [
+      'i.ytimg.com', 'i.scdn.co', 'spotifycdn.com',
+      'pbs.twimg.com', 'i.pinimg.com',
+      'cloudfront.net', 'cloudinary',
+      'imgur', 'imgix',
+      'googleusercontent.com',
+      '/fotoweb/', '/images/', '/img/', '/image/',
+      '/uploads/', '/media/', '/assets/',
+      '/wp-content/',
+    ];
+    
+    return imageHostPatterns.some(pattern => lower.includes(pattern));
   };
 
   const imageItems = images
